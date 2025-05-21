@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
-from models import db, User, Product, Category, ProductImage
+from models import User, Product, Category, ProductImage
+from config import db
 
 # Import directly from the groq package
 from groq import (
@@ -17,7 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 # Create blueprints
 groq = Blueprint("groq", __name__, url_prefix="/api/v1/groq")
 auth = Blueprint("auth", __name__, url_prefix="/api/v1/auth")
-langchain = Blueprint("langchain", __name__, url_prefix="/api/v1/langchain")
+# langchain = Blueprint("langchain", __name__, url_prefix="/api/v1/langchain")
 
 
 # Auth routes

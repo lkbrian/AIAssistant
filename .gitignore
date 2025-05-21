@@ -9,6 +9,7 @@ __pycache__/
 .Python
 env/
 .venv/
+aiassistant/
 ENV/
 build/
 develop-eggs/

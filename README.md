@@ -25,6 +25,15 @@ A containerized Flask backend with PostgreSQL database for the MarketAI assistan
 - **categories**: id, name, description, created_at, updated_at
 - **users**: id, username, email, password_hash, created_at, updated_at
 
+langchain query
+```shell
+curl --location 'http://localhost:5000/api/v1/langchain/query' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "Show me headphones"
+}'
+```
+
 single comprehensive query
 ```shell
   curl --location 'http://localhost:5000/api/v1/groq/nlp_search/products' \

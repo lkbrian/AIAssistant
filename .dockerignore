@@ -1,6 +1,7 @@
 .env
 .git
 .gitignore
+aiassistant/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -8,6 +9,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 ENV/
 build/
 develop-eggs/

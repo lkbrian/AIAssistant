@@ -5,7 +5,7 @@ import requests
 from flask import current_app
 from sqlalchemy import text
 
-from models import db
+from config import db
 
 
 def generate_embedding(text):
