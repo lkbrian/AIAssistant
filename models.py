@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import ARRAY, FLOAT
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -70,10 +71,8 @@ class Product(db.Model):
     image_url = db.Column(db.String(500))
     rating = db.Column(db.Float, default=0)
     embedding = db.Column(ARRAY(FLOAT))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
+    created_at = db.Column(db.DateTime, server_default=func.now())
+    updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
     images = db.relationship(

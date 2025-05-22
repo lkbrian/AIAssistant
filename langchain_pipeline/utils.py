@@ -39,9 +39,7 @@ llm = AzureChatOpenAI(
     temperature=0,
 )
 memory = ConversationBufferMemory(return_messages=True)
-
 # intent_prompt
-
 # intent_chain = intent_prompt | llm | JsonOutputParser()
 
 
@@ -109,8 +107,14 @@ class LLMQueryPipeline:
                     "system",
                     """Act as an AI shopping assistant with PostgreSQL expertise. Convert queries to JSON with SQL following these rules:
             **Schema:**
-            - products (id, name, description, price, rating, category, stock, image_url)
+            - products (id, name, description, price, rating, category, stock, image_url,created_at, updated_at)
             - categories (id, name, description)
+            
+            **Semantic analysis:**
+            - Carefully analyze the user's input to determine their intent and relevant product filters.
+            - Identify if the input is a **greeting**, **question**, **command**, or **product request**.
+            - If the input is only a **greeting or small talk** (e.g., "hello", "how are you?"), respond naturally and **do not generate a SQL query**.
+            - If the input includes a **product-related intent**, extract and interpret relevant features:
 
             **Instructions:**
             1. Analyze query for:
@@ -118,7 +122,7 @@ class LLMQueryPipeline:
             - Quality hints: "best"→rating>4, "cool/nice"→description match
             2. Respond with friendly message showing understanding
             3. Generate 1 SQL query:
-            - SELECT p.id, p.name, p.image_url, p.description, p.price, p.rating, c.name AS category_name
+            - SELECT p.*, c.name AS category_name
             - FROM products p JOIN categories c ON p.category=c.id
             - WHERE (p.name ILIKE %s OR p.description ILIKE %s OR c.name ILIKE %s OR c.description ILIKE %s)
             - Add filters/ordering based on intent
@@ -127,7 +131,7 @@ class LLMQueryPipeline:
             Return EXACTLY this format:
             {{
             "response": "Friendly response here",
-            "query": "SELECT p.id, p.name, p.image_url, p.description, p.price, p.rating, c.name AS category_name FROM products p JOIN categories c ON p.category = c.id WHERE ... ORDER BY ... LIMIT 10;"
+            "query": "The SQL query"
             }}""",
                 ),
                 MessagesPlaceholder(variable_name="history"),
@@ -150,20 +154,14 @@ class LLMQueryPipeline:
             )
 
             if not all(key in result for key in ("response", "query")):
-                raise ValueError("Invalid response format from LLM")
+                raise ValueError("Invalid response format from LLM", result)
 
-            self.memory.chat_memory.add_ai_message(
-                f"Response: {result['response']}\nQuery: {result['query']}"
-            )
+            self.memory.chat_memory.add_ai_message(f"{result['response']}")
             current_app.logger.info(f"Successfully extracted SQL: {result['query']}")
             return {
                 "sql_query": result["query"],
                 "natural_response": result["response"],
-                "history": state["history"]
-                + [
-                    HumanMessage(content=user_input),
-                    AIMessage(content=result["response"]),
-                ],
+                "history": self.memory.load_memory_variables({})["history"],
             }
 
         except Exception as e:
@@ -205,10 +203,8 @@ class LLMQueryPipeline:
         if state.get("error"):
             current_app.logger.error(f"Error occurred: {state['error']}")
             return {
-                "output": {
-                    "response": f"Error: {state['error']}",
-                    "products": None,
-                }
+                "response": f"Error: {state['error']}",
+                "products": None,
             }
 
         try:
