@@ -8,7 +8,7 @@ import re
 from typing import List, Optional, TypedDict
 from dotenv import load_dotenv
 from flask import current_app
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import HumanMessage
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts.chat import (
     ChatPromptTemplate,

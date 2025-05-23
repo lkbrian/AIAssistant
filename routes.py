@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
-from models import User, Product, Category, ProductImage
+from models import User, Product, Category
 from config import db
 
 # Import directly from the groq package
@@ -168,19 +168,19 @@ def create_product():
     )
 
     # Generate embedding for product description
-    if data.get("description"):
-        product.embedding = generate_embedding(data["description"])
+    # if data.get("description"):
+    #     product.embedding = generate_embedding(data["description"])
 
     try:
         db.session.add(product)
         db.session.commit()
 
         # Add product images if provided
-        if "images" in data and isinstance(data["images"], list):
-            for image_url in data["images"]:
-                image = ProductImage(product_id=product.id, url=image_url)
-                db.session.add(image)
-            db.session.commit()
+        # if "images" in data and isinstance(data["images"], list):
+        #     for image_url in data["images"]:
+        #         image = ProductImage(product_id=product.id, url=image_url)
+        #         db.session.add(image)
+        #     db.session.commit()
 
         return (
             jsonify(
@@ -232,15 +232,15 @@ def update_product(product_id):
         db.session.commit()
 
         # Update product images if provided
-        if "images" in data and isinstance(data["images"], list):
-            # Remove existing images
-            ProductImage.query.filter_by(product_id=product.id).delete()
+        # if "images" in data and isinstance(data["images"], list):
+        #     # Remove existing images
+        #     ProductImage.query.filter_by(product_id=product.id).delete()
 
-            # Add new images
-            for image_url in data["images"]:
-                image = ProductImage(product_id=product.id, url=image_url)
-                db.session.add(image)
-            db.session.commit()
+        #     # Add new images
+        #     for image_url in data["images"]:
+        #         image = ProductImage(product_id=product.id, url=image_url)
+        #         db.session.add(image)
+        #     db.session.commit()
 
         return (
             jsonify(

@@ -1,7 +1,7 @@
 from config import app, db
 from routes import groq, auth
 from sqlalchemy import text
-from langchain_pipeline.routes import langchain
+from products.routes import langchain
 
 app.register_blueprint(groq)
 app.register_blueprint(auth)
