@@ -1,10 +1,13 @@
 from flask import Blueprint, request, jsonify
 from .utils import run_pipeline
+from flask_jwt_extended import jwt_required
 
 langchain = Blueprint("langchain", __name__, url_prefix="/api/v1/langchain")
+products = Blueprint("products", __name__, url_prefix="/api/v1/products")
 
 
 @langchain.route("/query", methods=["POST"])
+@jwt_required("admin")
 def query():
     """
     Endpoint to handle SQL queries.

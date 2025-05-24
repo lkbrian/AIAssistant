@@ -25,6 +25,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(weeks=1)
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "default-jwt-secret")
 app.config["EMBEDDING_DIMENSION"] = 1024
+app.config["JWT_BLACKLIST_ENABLED"] = True
+app.config["JWT_BLACKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
+
 app.json.compact = False
 metadata = MetaData(
     naming_convention={
@@ -40,3 +43,8 @@ jwt = JWTManager()
 jwt.init_app(app)
 migrate = Migrate(app, db)
 CORS(app)
+
+
+@jwt.token_in_blocklist_loader
+def check_if_token_is_revoked(jwt_header, jwt_payload):
+    return jwt_payload["jti"] in blacklist

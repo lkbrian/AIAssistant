@@ -48,13 +48,13 @@ class User(db.Model, SerializerMixin):
     )
 
     id = db.Column(db.String(255), primary_key=True)
-    first_name = db.Column(db.String(255))
+    first_name = db.Column(db.String(255), nullable=False)
     middle_name = db.Column(db.String(255))
-    last_name = db.Column(db.String(255))
+    last_name = db.Column(db.String(255), nullable=False)
     username = db.Column(db.String(255), unique=True, nullable=False)
-    user_type_id = db.Column(db.Integer, db.ForeignKey("user_types.id"))
+    user_type_id = db.Column(db.Integer, db.ForeignKey("user_types.id"), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
-    password = db.Column(db.String(255))
+    password = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, server_default=func.now())
     updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -189,13 +189,6 @@ class Property(db.Model, SerializerMixin):
     updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    media = db.relationship(
-        "EntityMedia",
-        primaryjoin="and_(EntityMedia.entity_id==Property.id, "
-        "EntityMedia.entity_type=='property')",
-        backref="property",
-        lazy=True,
-    )
     type = db.relationship("PropertyType", back_populates="properties", lazy=True)
     business = db.relationship("Business", back_populates="properties", lazy=True)
 
@@ -244,7 +237,9 @@ class Accommodation(db.Model, SerializerMixin):
     business_id = db.Column(
         db.String(255), db.ForeignKey("m_business.id"), nullable=False
     )
-    room_type_id = db.Column(db.Integer, nullable=False)  # single, double, suite
+    room_type_id = db.Column(
+        db.Integer, db.ForeignKey("room_types.id"), nullable=False
+    )  # single, double, suite
     name = db.Column(db.String(255))
     description = db.Column(db.String(255))
     bedrooms = db.Column(db.Integer)
@@ -256,14 +251,6 @@ class Accommodation(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, server_default=func.now())
     updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
 
-    # Relationships
-    media = db.relationship(
-        "EntityMedia",
-        primaryjoin="and_(EntityMedia.entity_id==Accommodation.id, "
-        "EntityMedia.entity_type=='accommodation')",
-        backref="accommodation",
-        lazy=True,
-    )
     business = db.relationship("Business", back_populates="accommodations", lazy=True)
     room_type_rel = db.relationship(
         "RoomType", back_populates="accommodations", lazy=True
@@ -321,14 +308,6 @@ class Food(db.Model):
     created_at = db.Column(db.DateTime, server_default=func.now())
     updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
 
-    # Relationships
-    media = db.relationship(
-        "EntityMedia",
-        primaryjoin="and_(EntityMedia.entity_id==Food.id, "
-        "EntityMedia.entity_type=='food')",
-        backref="food",
-        lazy=True,
-    )
     category_rel = db.relationship("Category", back_populates="foods", lazy=True)
     business = db.relationship("Business", back_populates="foods", lazy=True)
 
@@ -374,14 +353,6 @@ class Product(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, server_default=func.now())
     updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
 
-    # Relationships
-    media = db.relationship(
-        "EntityMedia",
-        primaryjoin="and_(EntityMedia.entity_id==Product.id, "
-        "EntityMedia.entity_type=='product')",
-        backref="product",
-        lazy=True,
-    )
     category_rel = db.relationship("Category", back_populates="products", lazy=True)
     business = db.relationship("Business", back_populates="products", lazy=True)
 
