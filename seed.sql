@@ -330,3 +330,9 @@ SELECT
     1 AS storage_type
 FROM products p
 CROSS JOIN generate_series(1, floor(random() * 2 + 2)::int) AS gs;
+
+INSERT INTO entity_media_types (id, name, description) VALUES
+(1, 'property', 'Media related to properties like homes, land, apartments, etc.'),
+(2, 'accommodation', 'Media showcasing hotel rooms, suites, and accommodation units.'),
+(3, 'food', 'Images of food dishes served in restaurants.'),
+(4, 'product', 'Media of products listed in the e-commerce section.');

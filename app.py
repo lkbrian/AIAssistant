@@ -1,14 +1,14 @@
 from config import app, db
 from routes import groq
 from sqlalchemy import text
-from products.routes import langchain
+from products.routes import products
 from auth.routes import auth, business
 
 
 app.register_blueprint(groq)
 app.register_blueprint(auth)
 app.register_blueprint(business)
-app.register_blueprint(langchain)
+app.register_blueprint(products)
 
 with app.app_context():
     db.session.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))

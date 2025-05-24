@@ -342,9 +342,9 @@ class Product(db.Model, SerializerMixin):
     business_id = db.Column(
         db.String(255), db.ForeignKey("m_business.id"), nullable=False
     )
-    name = db.Column(db.String(255))
+    name = db.Column(db.String(255), nullable=False)
     description = db.Column(db.String(255))
-    price = db.Column(db.Numeric)
+    price = db.Column(db.Float, nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"))
     stock = db.Column(db.Integer)
     image_url = db.Column(db.String(255))
@@ -369,7 +369,34 @@ class EntityMedia(db.Model, SerializerMixin):
     __tablename__ = "entity_media"
     serialize_only = ("id", "entity_type", "entity_id", "url", "storage_type")
     id = db.Column(db.Integer, primary_key=True)
-    entity_type = db.Column(db.Integer, nullable=False)  # property, foods, etc.
+    entity_type_id = db.Column(
+        db.Integer, db.ForeignKey("entity_media_types.id"), nullable=False
+    )  # property, foods, etc.
     entity_id = db.Column(db.Integer, nullable=False)
     url = db.Column(db.String(255))
     storage_type = db.Column(db.Integer)  # bucket, in-memory
+    created_at = db.Column(db.DateTime, server_default=func.now())
+    updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
+
+    media_type = db.relationship(
+        "EntityMediaType", back_populates="entity_media", lazy=True
+    )
+
+    @property
+    def entity_type(self):
+        return self.media_type.name if self.media_type else None
+
+
+class EntityMediaType(db.Model, SerializerMixin):
+    __tablename__ = "entity_media_types"
+    serialize_only = ("id", "name", "description")
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(
+        db.String(255), unique=True, nullable=False
+    )  # property, food, etc.
+    description = db.Column(db.String(255))
+
+    # Relationships
+    entity_media = db.relationship(
+        "EntityMedia", back_populates="media_type", lazy=True
+    )

@@ -255,6 +255,80 @@ def create_business():
         db.session.close()
 
 
+@business.route("/business/getall", methods=["GET"])
+def get_all_businesses():
+    """Endpoint to get all businesses."""
+    try:
+        businesses = Business.query.all()
+        return make_response(
+            jsonify({"businesses": [b.to_dict() for b in businesses]}), 200
+        )
+        pass
+    except Exception as e:
+        return make_response(jsonify({"message": str(e)}), 400)
+
+
+@business.route("/business/getone/<string:business_id>", methods=["GET"])
+def get_business_by_id(business_id):
+    """Endpoint to get a business by its ID."""
+    try:
+        business = Business.query.get_or_404(business_id)
+        return make_response(jsonify(business.to_dict()), 200)
+    except Exception as e:
+        return make_response(jsonify({"message": str(e)}), 400)
+
+
+@business.route("/business/patch/<string:business_id>", methods=["PATCH"])
+def patch_business(business_id):
+    """Endpoint to update a business profile."""
+    data = request.get_json()
+    try:
+
+        business = Business.query.filter_by(id=business_id).first()
+        if not business:
+            return make_response(jsonify({"error": "Business not found"}), 404)
+        business_type = None
+        if data.get("businessType"):
+            business_type = BusinessType.query.filter_by(
+                name=data.get("businessType")
+            ).first()
+            if not business_type:
+                return make_response(
+                    jsonify(
+                        {
+                            "error": "Invalid business type",
+                            "developer Message": "Business Type doesn't exist",
+                        }
+                    ),
+                    400,
+                )
+        business.name = data.get("name", business.name)
+        business.location = data.get("location", business.location)
+        business.hospitality_type = data.get(
+            "hospitalityType", business.hospitality_type
+        )
+        business.email = data.get("email", business.email)
+        business.phone_number = data.get("phoneNumber", business.phone_number)
+        business.business_type_id = (
+            business_type.id if business_type else business.business_type_id
+        )
+        db.session.commit()
+
+        return make_response(
+            jsonify(
+                {
+                    "message": "Business updated successfully",
+                    "business": business.to_dict(),
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        return make_response(jsonify({"message": str(e)}), 400)
+
+
 @business.route("/profile", methods=["GET"])
 @jwt_required()
 def get_profile():
