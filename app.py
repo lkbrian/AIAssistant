@@ -11,7 +11,7 @@ app.register_blueprint(business)
 app.register_blueprint(products)
 
 with app.app_context():
-    db.session.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+    # db.session.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
     db.session.commit()
     db.create_all()
 
