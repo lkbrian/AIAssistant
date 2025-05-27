@@ -11,6 +11,7 @@ TRUNCATE TABLE
     business_types,
     property_types,
     room_types,
+    entity_media_types,
     categories CASCADE;
 
 -- Reset all sequences
@@ -23,6 +24,7 @@ ALTER SEQUENCE products_id_seq RESTART WITH 1;
 ALTER SEQUENCE food_id_seq RESTART WITH 1;
 ALTER SEQUENCE property_id_seq RESTART WITH 1;
 ALTER SEQUENCE accomodation_id_seq RESTART WITH 1;
+ALTER SEQUENCE entity_media_type_id_seq RESTART WITH 1;
 ALTER SEQUENCE entity_media_id_seq RESTART WITH 1;
 
 -- Insert User Types
@@ -294,45 +296,48 @@ SELECT
     'embedding_' || generate_series AS embedding
 FROM generate_series(1, 450);
 
--- Add media for all entities
-INSERT INTO entity_media (entity_type, entity_id, url, storage_type)
-SELECT 
-    1 AS entity_type,  -- 1 for property
-    p.id AS entity_id,
-    'https://source.unsplash.com/800x600/?property,real,estate,house,apartment&sig=' || p.id || '_' || gs AS url,
-    1 AS storage_type
-FROM property p
-CROSS JOIN generate_series(1, floor(random() * 3 + 2)::int) AS gs;
-
-INSERT INTO entity_media (entity_type, entity_id, url, storage_type)
-SELECT 
-    2 AS entity_type,  -- 2 for accommodation
-    a.id AS entity_id,
-    'https://source.unsplash.com/800x600/?hotel,room,accommodation,suite&sig=' || a.id || '_' || gs AS url,
-    1 AS storage_type
-FROM accomodation a
-CROSS JOIN generate_series(1, floor(random() * 2 + 2)::int) AS gs;
-
-INSERT INTO entity_media (entity_type, entity_id, url, storage_type)
-SELECT 
-    3 AS entity_type,  -- 3 for food
-    f.id AS entity_id,
-    'https://source.unsplash.com/800x600/?food,cuisine,restaurant,dish&sig=' || f.id || '_' || gs AS url,
-    1 AS storage_type
-FROM food f
-CROSS JOIN generate_series(1, floor(random() * 2 + 1)::int) AS gs;
-
-INSERT INTO entity_media (entity_type, entity_id, url, storage_type)
-SELECT 
-    4 AS entity_type,  -- 4 for product
-    p.id AS entity_id,
-    'https://source.unsplash.com/800x600/?product,electronics,furniture,fashion&sig=' || p.id || '_' || gs AS url,
-    1 AS storage_type
-FROM products p
-CROSS JOIN generate_series(1, floor(random() * 2 + 2)::int) AS gs;
 
 INSERT INTO entity_media_types (id, name, description) VALUES
 (1, 'property', 'Media related to properties like homes, land, apartments, etc.'),
 (2, 'accommodation', 'Media showcasing hotel rooms, suites, and accommodation units.'),
 (3, 'food', 'Images of food dishes served in restaurants.'),
 (4, 'product', 'Media of products listed in the e-commerce section.');
+
+-- Add media for all entities
+INSERT INTO entity_media (entity_type_id, entity_id, url, storage_type)
+SELECT 
+    1 AS entity_type_id,  -- 1 for property
+    p.id AS entity_id,
+    'https://source.unsplash.com/800x600/?property,real,estate,house,apartment&sig=' || p.id || '_' || gs AS url,
+    1 AS storage_type
+FROM property p
+CROSS JOIN generate_series(1, floor(random() * 3 + 2)::int) AS gs;
+
+INSERT INTO entity_media (entity_type_id, entity_id, url, storage_type)
+SELECT 
+    2 AS entity_type_id,  -- 2 for accommodation
+    a.id AS entity_id,
+    'https://source.unsplash.com/800x600/?hotel,room,accommodation,suite&sig=' || a.id || '_' || gs AS url,
+    1 AS storage_type
+FROM accomodation a
+CROSS JOIN generate_series(1, floor(random() * 2 + 2)::int) AS gs;
+
+INSERT INTO entity_media (entity_type_id, entity_id, url, storage_type)
+SELECT 
+    3 AS entity_type_id,  -- 3 for food
+    f.id AS entity_id,
+    'https://source.unsplash.com/800x600/?food,cuisine,restaurant,dish&sig=' || f.id || '_' || gs AS url,
+    1 AS storage_type
+FROM food f
+CROSS JOIN generate_series(1, floor(random() * 2 + 1)::int) AS gs;
+
+
+INSERT INTO entity_media (entity_type_id, entity_id, url, storage_type)
+SELECT 
+    4 AS entity_type_id,  -- 4 for product
+    p.id AS entity_id,
+    'https://source.unsplash.com/800x600/?product,electronics,furniture,fashion&sig=' || p.id || '_' || gs AS url,
+    1 AS storage_type
+FROM products p
+CROSS JOIN generate_series(1, floor(random() * 2 + 2)::int) AS gs;
+

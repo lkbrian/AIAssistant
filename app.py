@@ -1,14 +1,13 @@
 from config import app, db
-from routes import groq
 from sqlalchemy import text
 from products.routes import products
-from auth.routes import auth, business
+from auth.routes import auth
+from routes import category, business
 
-
-app.register_blueprint(groq)
 app.register_blueprint(auth)
 app.register_blueprint(business)
 app.register_blueprint(products)
+app.register_blueprint(category)
 
 with app.app_context():
     # db.session.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
