@@ -1,22 +1,10 @@
 import json
 
-import cohere
 import requests
 from flask import current_app
 from sqlalchemy import text
 
 from config import db
-
-
-def generate_embedding(text):
-    """Generate embedding using Cohere API"""
-    try:
-        co = cohere.Client(api_key=current_app.config["COHERE_API_KEY"])
-        response = co.embed(texts=[text], model=current_app.config["EMBEDDING_MODEL"])
-        return response.embeddings[0]
-    except Exception as e:
-        current_app.logger.error(f"Error generating embedding: {str(e)}")
-        return None
 
 
 def query_groq(message):
@@ -89,11 +77,12 @@ def query_groq(message):
                     "response": parsed.get("response", ""),
                     "sql_query": parsed.get("sql_query", ""),
                 }
-            except:
+            except Exception as e:
                 # Fallback if parsing fails
                 return {
                     "response": "I'm sorry, I couldn't process your request properly.",
                     "sql_query": "SELECT * FROM products LIMIT 5",
+                    "error": str(e),
                 }
         else:
             current_app.logger.error(
@@ -376,107 +365,6 @@ def get_groq_response(message):
                 "SELECT p.id, p.name,p.image_url, p.description, p.price, p.rating, c.name AS category_name FROM products p JOIN categories c ON p.category = c.id ORDER BY p.rating DESC LIMIT 10;"
             ],
         }
-
-
-def search_products_by_embedding(query_text, limit=10):
-    """
-    Search products by semantic similarity using embeddings.
-
-    Args:
-        query_text: The text to search for
-        limit: Maximum number of results to return
-
-    Returns:
-        List of products sorted by similarity to the query
-    """
-    try:
-        # Generate embedding for the query text
-        query_embedding = generate_embedding(query_text)
-
-        if not query_embedding:
-            current_app.logger.error("Failed to generate embedding for query")
-            return []
-
-        # Convert embedding to PostgreSQL array format
-        embedding_array = f"'{{{','.join(str(x) for x in query_embedding)}}}'"
-
-        # Use L2 distance (Euclidean distance) instead of cosine similarity
-        # This is more commonly supported without special extensions
-        sql_query = f"""
-        SELECT 
-            p.id, p.name, p.description, p.price, p.rating, c.name AS category_name
-        FROM 
-            products p
-        JOIN
-            categories c ON p.category = c.id
-        WHERE 
-            p.embedding IS NOT NULL
-        ORDER BY 
-            p.embedding <-> {embedding_array}::vector
-        LIMIT {limit}
-        """
-
-        # Execute the query
-        result = db.session.execute(text(sql_query))
-
-        # Convert result to list of dictionaries
-        products = []
-        for row in result:
-            product = {}
-            for column, value in row._mapping.items():
-                product[column] = value
-            products.append(product)
-
-        return products
-    except Exception as e:
-        current_app.logger.error(f"Error searching products by embedding: {str(e)}")
-
-        # Fallback to keyword search if vector search fails
-        try:
-            current_app.logger.info(f"Falling back to keyword search for: {query_text}")
-            # Simple keyword search as fallback
-            words = query_text.split()
-            conditions = []
-
-            for word in words:
-                if len(word) > 3:  # Only use words longer than 3 chars
-                    word = word.replace("'", "''")  # Escape single quotes
-                    conditions.append(
-                        f"p.name ILIKE '%{word}%' OR p.description ILIKE '%{word}%'"
-                    )
-
-            where_clause = " OR ".join(conditions) if conditions else "1=1"
-
-            sql_query = f"""
-            SELECT 
-                p.id, p.name, p.description, p.price, p.rating, c.name AS category_name
-            FROM 
-                products p
-            JOIN
-                categories c ON p.category = c.id
-            WHERE 
-                {where_clause}
-            ORDER BY 
-                p.rating DESC
-            LIMIT {limit}
-            """
-
-            result = db.session.execute(text(sql_query))
-
-            products = []
-            for row in result:
-                product = {}
-                for column, value in row._mapping.items():
-                    product[column] = value
-                products.append(product)
-
-            return products
-
-        except Exception as fallback_error:
-            current_app.logger.error(
-                f"Fallback search also failed: {str(fallback_error)}"
-            )
-            return []
 
 
 def get_groq_response_multiple_queries(message):

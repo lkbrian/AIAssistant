@@ -20,6 +20,7 @@ from sqlalchemy import text
 
 from config import db
 from langchain.memory import ConversationBufferMemory
+from azure.storage.blob import BlobServiceClient
 
 
 load_dotenv()
@@ -31,6 +32,10 @@ endpoint = os.getenv("AZURE_DEPLOYMENT_ENDPOINT", "https://lemu.openai.azure.com
 api_key = os.getenv("AZURE_API_KEY")
 deployment = os.getenv("DEPLOYMENT_NAME", "lemu-gpt-4o-mini")
 
+account_url = "https://lemustorage.blob.core.windows.net/"
+sas_token = "sp=racwdli&st=2025-05-26T19:02:43Z&se=2026-12-31T03:02:43Z&sv=2024-11-04&sr=c&sig=CKd47TEfmlgzG1ph%2BGyA%2Fn1WrOSyFC5kwjxe29%2BtJFI%3D"
+container_name = "media"
+
 llm = AzureChatOpenAI(
     azure_endpoint=endpoint,
     deployment_name=deployment,
@@ -39,8 +44,21 @@ llm = AzureChatOpenAI(
     temperature=0,
 )
 memory = ConversationBufferMemory(return_messages=True)
-# intent_prompt
-# intent_chain = intent_prompt | llm | JsonOutputParser()
+
+
+class AzureBlobUtility:
+    def __init__(self, container_name):
+        self.container_name = container_name
+        self.blob_service_client = BlobServiceClient(
+            account_url=account_url, credential=sas_token
+        )
+        self.container_client = self.blob_service_client.get_container_client("media")
+
+        # Create container if it doesn't exist (with public access to blobs)
+
+    def upload_fileobj(self, file_obj, blob_name):
+        self.container_client.upload_blob(name=blob_name, data=file_obj, overwrite=True)
+        return f"{account_url}/{self.container_name}/{blob_name}"
 
 
 class GraphState(TypedDict):
@@ -53,7 +71,6 @@ class GraphState(TypedDict):
 
 
 class SQLUtils:
-
     @staticmethod
     def _sanitize_sql_query(sql_query: str) -> str:
         """Basic SQL sanitization to prevent injection and remove unwanted characters."""
@@ -263,3 +280,21 @@ def run_pipeline(user_input: str) -> dict:
             serializable_result[key] = value
 
     return serializable_result
+
+
+def upload_file_to_azure(file_obj, blob_name):
+    """
+    Upload a file-like object to Azure Blob Storage.
+    :param file_obj: File-like object to upload.
+    :param blob_name: Name of the blob in Azure.
+    :return: URL of the uploaded blob.
+    """
+
+    try:
+        azure_util = AzureBlobUtility(container_name)
+        url = azure_util.upload_fileobj(file_obj, blob_name)
+        return {"url": url, "message": "File uploaded successfully."}
+
+    except Exception as e:
+        current_app.logger.error(f"Error uploading file to Azure: {str(e)}")
+        return f"Error: {str(e)}"

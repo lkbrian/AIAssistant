@@ -365,6 +365,21 @@ class Product(db.Model, SerializerMixin):
         return self.business.name if self.business else None
 
 
+class EntityMediaType(db.Model, SerializerMixin):
+    __tablename__ = "entity_media_types"
+    serialize_only = ("id", "name", "description")
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(
+        db.String(255), unique=True, nullable=False
+    )  # property, food, etc.
+    description = db.Column(db.String(255))
+
+    # Relationships
+    entity_media = db.relationship(
+        "EntityMedia", back_populates="media_type", lazy=True
+    )
+
+
 class EntityMedia(db.Model, SerializerMixin):
     __tablename__ = "entity_media"
     serialize_only = ("id", "entity_type", "entity_id", "url", "storage_type")
@@ -385,18 +400,3 @@ class EntityMedia(db.Model, SerializerMixin):
     @property
     def entity_type(self):
         return self.media_type.name if self.media_type else None
-
-
-class EntityMediaType(db.Model, SerializerMixin):
-    __tablename__ = "entity_media_types"
-    serialize_only = ("id", "name", "description")
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(
-        db.String(255), unique=True, nullable=False
-    )  # property, food, etc.
-    description = db.Column(db.String(255))
-
-    # Relationships
-    entity_media = db.relationship(
-        "EntityMedia", back_populates="media_type", lazy=True
-    )
