@@ -1,5 +1,5 @@
 from flask import Blueprint, make_response, request, jsonify, current_app
-
+from werkzeug.utils import secure_filename
 from models import (
     Business,
     Category,
@@ -75,7 +75,8 @@ def create_product():
         uploaded_urls = []
         for idx, file_obj in enumerate(files):
             # Create unique blob name, you could use UUID or product ID for structure
-            blob_name = f"products/{product.id}/{idx}_{file_obj.filename}"
+            safe_filename = secure_filename(file_obj.filename)
+            blob_name = f"products/{product.id}/{idx}_{safe_filename}"
             result = upload_file_to_azure(file_obj, blob_name)
 
             if isinstance(result, dict) and result.get("url"):
@@ -129,7 +130,15 @@ def get_product(product_id):
     if not product:
         return make_response(jsonify({"error": "Product not found"}), 404)
 
-    return make_response(jsonify({"product": product.to_dict()}))
+    media = EntityMedia.query.filter_by(
+        entity_id=product.id,
+        entity_type=EntityMediaType.query.filter_by(name="product").first().id,
+    ).all()
+    product.media = [m.url for m in media]
+
+    if not product.media:
+        product.media = []
+    return make_response(jsonify(product.to_dict()))
 
 
 @products.route("/getall", methods=["GET"])
@@ -141,9 +150,15 @@ def get_products():
     per_page = request.args.get("per_page", 10, type=int)
     category = request.args.get("category", type=int)
 
-    query = Product.query
+    existing_category = None
     if category:
-        query = query.filter_by(category_id=category)
+        existing_category = Category.query.filter_by(name=category).first()
+        if not existing_category:
+            return make_response(jsonify({"error": "Category not found"}), 404)
+
+    query = Product.query
+    if existing_category:
+        query = query.filter_by(category_id=existing_category.id)
 
     products_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     products = [product.to_dict() for product in products_pagination.items]
@@ -151,7 +166,7 @@ def get_products():
     return make_response(
         jsonify(
             {
-                "products": products,
+                "items": products,
                 "total": products_pagination.total,
                 "pages": products_pagination.pages,
                 "page": products_pagination.page,
@@ -177,13 +192,15 @@ def patch_product(product_id):
     if not product:
         return make_response(jsonify({"error": "Product not found"}), 404)
 
-    category = Category.query.filter_by(name=data.get("category")).first()
-    if not category:
-        return make_response(jsonify({"error": "Category not found"}), 404)
+    category = None
+    if data.get("category"):
+        category = Category.query.filter_by(name=data.get("category")).first()
+        if not category:
+            return make_response(jsonify({"error": "Category not found"}), 404)
 
     product.name = data.get("name", product.name)
     product.description = data.get("description", product.description)
-    product.category_id = category.id
+    product.category_id = category.id if category else product.category_id
     product.stock = int(data.get("stock", product.stock))
     product.price = float(data.get("price", product.price))
     product.rating = float(data.get("rating", product.rating))

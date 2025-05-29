@@ -58,7 +58,7 @@ class AzureBlobUtility:
 
     def upload_fileobj(self, file_obj, blob_name):
         self.container_client.upload_blob(name=blob_name, data=file_obj, overwrite=True)
-        return f"{account_url}/{self.container_name}/{blob_name}"
+        return f"{account_url}{self.container_name}/{blob_name}"
 
 
 class GraphState(TypedDict):
