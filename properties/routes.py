@@ -6,7 +6,6 @@ from config import db
 
 property = Blueprint("property", __name__, url_prefix="/api/v1/property")
 
-
 @property.route("/create", methods=["POST"])
 @jwt_required("business_owner")
 def create_property():
@@ -17,10 +16,13 @@ def create_property():
     required_fields = [
         "name",
         "description",
-        "category",
-        "stock",
+        "bedrooms",
+        "bathrooms",
+        "land_size",
         "price",
-        "businessType",
+        "location",
+        "status",
+        "year_built",
     ]
     missing_fields = [k for k in required_fields if not data.get(k)]
     if "media" not in request.files:
@@ -45,6 +47,7 @@ def create_property():
         print(files)
 
         property = Property(
+            1,'2345'
         )
         db.session.add(property)
         db.session.flush()
