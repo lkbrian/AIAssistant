@@ -5,13 +5,16 @@ from auth.routes import auth
 from foods.routes import foods
 from accomodations.routes import accommodations
 from routes import category, business
-
+from properties.routes import property
 app.register_blueprint(auth)
 app.register_blueprint(business)
 app.register_blueprint(products)
 app.register_blueprint(category)
 app.register_blueprint(foods)
 app.register_blueprint(accommodations)
+app.register_blueprint(property)
+
+
 
 with app.app_context():
     # db.session.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))

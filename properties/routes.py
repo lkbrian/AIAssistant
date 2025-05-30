@@ -7,12 +7,12 @@ from config import db
 property = Blueprint("property", __name__, url_prefix="/api/v1/property")
 
 @property.route("/create", methods=["POST"])
-@jwt_required("business_owner")
+# @jwt_required("business_owner")
 def create_property():
     """
     Endpoint to create a new property.
     """
-    data = request.form()
+    data = request.form
     required_fields = [
         "name",
         "description",
@@ -46,16 +46,24 @@ def create_property():
         files = request.files.getlist("media")
         print(files)
 
+        print("<<loading the property well>>")
         property = Property(
-            1,'2345'
+            name=data["name"],
+            description=data["description"],
+            bedrooms=data["bedrooms"],
+            land_size = data["landSize"],
+            price = data["price"],
+            location = data["location"],
+            status = data["status"],
+            year_built = data["year_built"]
         )
         db.session.add(property)
         db.session.flush()
-        entity_type = EntityMediaType.query.filter_by(name="product").first()
+        entity_type = EntityMediaType.query.filter_by(name="property").first()
         if not entity_type:
             return make_response(jsonify({"error": "Entity type not found"}), 404)
         entity_media = EntityMedia(
-            entity_id=product.id,
+            entity_id=property.id,
             entity_type_id=entity_type.id,
             url="",
             storage_type=1,  # Assuming 1 is for local storage
@@ -66,8 +74,8 @@ def create_property():
         return make_response(
             jsonify(
                 {
-                    "message": "Product created successfully",
-                    "product": product.to_dict(),
+                    "message": "property created successfully",
+                    "product": property.to_dict(),
                 }
             ),
             201,
