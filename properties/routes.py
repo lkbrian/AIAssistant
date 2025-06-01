@@ -89,7 +89,7 @@ def get_property(property_id):
     """
     property = Product.query.get(property_id)
     if not property:
-        return make_response(jsonify({"error": "Product not found"}), 404)
+        return make_response(jsonify({"error": "Property not found"}), 404)
 
     media = EntityMedia.query.filter_by(
         entity_id=property.id,
@@ -100,3 +100,41 @@ def get_property(property_id):
     if not property.media:
         property.media = []
     return make_response(jsonify(property.to_dict()))
+
+@property.route("/getall", methods=["GET"])
+def get_properties():
+    """
+    Endpoint to retrieve paginated properties, supports filtering by category.
+    """
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+    category = request.args.get("category", type=int)
+
+    existing_category = None
+    if category:
+        existing_category = Category.query.filter_by(name=category).first()
+        if not existing_category:
+            return make_response(jsonify({"error": "Category not found"}), 404)
+
+    query = Property.query
+    if existing_category:
+        query = query.filter_by(category_id=existing_category.id)
+
+    property_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    properties = [property.to_dict() for product in property_pagination.items]
+
+    return make_response(
+        jsonify(
+            {
+                "items": properties,
+                "total": property_pagination.total,
+                "pages": property_pagination.pages,
+                "page": property_pagination.page,
+                "per_page": property_pagination.per_page,
+                "has_next": property_pagination.has_next,
+                "has_prev": property_pagination.has_prev,
+            }
+        )
+    )
+
+
