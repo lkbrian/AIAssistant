@@ -44,9 +44,7 @@ def create_property():
             return make_response(jsonify({"error": "Business type not found"}), 404)
 
         files = request.files.getlist("media")
-        print(files)
 
-        print("<<loading the property well>>")
         property = Property(
             name=data["name"],
             description=data["description"],
@@ -84,4 +82,21 @@ def create_property():
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
 
+@property.route("/getone/<int:property_id>", methods=["GET"])
+def get_property(property_id):
+    """
+    Endpoint to retrieve a property by its ID.
+    """
+    property = Product.query.get(property_id)
+    if not property:
+        return make_response(jsonify({"error": "Product not found"}), 404)
 
+    media = EntityMedia.query.filter_by(
+        entity_id=property.id,
+        entity_type=EntityMediaType.query.filter_by(name="property").first().id,
+    ).all()
+    property.media = [m.url for m in media]
+
+    if not property.media:
+        property.media = []
+    return make_response(jsonify(property.to_dict()))
