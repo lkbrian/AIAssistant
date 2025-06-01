@@ -4,7 +4,7 @@ from models import BusinessType, Category, EntityMedia, EntityMediaType, Product
 from flask_jwt_extended import jwt_required
 from config import db
 
-property = Blueprint("property", __name__, url_prefix="/api/v1/property")
+# property = Blueprint("property", __name__, url_prefix="/api/v1/property")
 
 @property.route("/create", methods=["POST"])
 # @jwt_required("business_owner")
@@ -45,7 +45,7 @@ def create_property():
 
         files = request.files.getlist("media")
 
-        property = Property(
+        prop = Property(
             name=data["name"],
             description=data["description"],
             bedrooms=data["bedrooms"],
@@ -55,13 +55,13 @@ def create_property():
             status = data["status"],
             year_built = data["year_built"]
         )
-        db.session.add(property)
+        db.session.add(prop)
         db.session.flush()
         entity_type = EntityMediaType.query.filter_by(name="property").first()
         if not entity_type:
             return make_response(jsonify({"error": "Entity type not found"}), 404)
         entity_media = EntityMedia(
-            entity_id=property.id,
+            entity_id=prop.id,
             entity_type_id=entity_type.id,
             url="",
             storage_type=1,  # Assuming 1 is for local storage
@@ -73,7 +73,7 @@ def create_property():
             jsonify(
                 {
                     "message": "property created successfully",
-                    "product": property.to_dict(),
+                    "product": prop.to_dict(),
                 }
             ),
             201,
@@ -137,4 +137,35 @@ def get_properties():
         )
     )
 
+
+@property.route("/patch/<int:property_id>", methods=["PATCH"])
+# @jwt_required("business_owner")
+def update_product(property_id):
+    """
+    Endpoint to update a property by its ID.
+    """
+    data = request.get_json()
+    if not data:
+        return make_response(jsonify({"error": "Invalid input"}), 400)
+
+    prop = Property.query.get(property_id)
+    if not prop:
+        return make_response(jsonify({"error": "Product not found"}), 404)
+
+    prop.name = data.get("name", prop.name)
+    prop.description = data.get("description", prop.description)
+    prop.bedrooms = data.get("bedrooms", prop.bedrooms)
+    prop.bathrooms = data.get("bathrooms", prop.bathrooms)
+    prop.land_size = int(data.get("land_size", prop.land_size))
+    prop.price = float(data.get("price", prop.price))
+    prop.location = float(data.get("location", prop.location))
+    prop.status = float(data.get("status", prop.status))
+    prop.year_built = float(data.get("year_built", prop.year_built))
+
+    db.session.commit()
+    return make_response(
+        jsonify(
+            {"message": "Property updated successfully", "property": prop.to_dict()}
+        )
+    )
 
