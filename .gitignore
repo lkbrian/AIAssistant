@@ -31,3 +31,8 @@ var/
 .vscode/
 *.swp
 *.swo
+seed.py
+migrations
+Makefile
+logs/
+logs/*

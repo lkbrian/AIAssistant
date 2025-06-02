@@ -24,7 +24,6 @@ ALTER SEQUENCE products_id_seq RESTART WITH 1;
 ALTER SEQUENCE food_id_seq RESTART WITH 1;
 ALTER SEQUENCE property_id_seq RESTART WITH 1;
 ALTER SEQUENCE accomodation_id_seq RESTART WITH 1;
-ALTER SEQUENCE entity_media_type_id_seq RESTART WITH 1;
 ALTER SEQUENCE entity_media_id_seq RESTART WITH 1;
 
 -- Insert User Types

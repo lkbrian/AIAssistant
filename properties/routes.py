@@ -1,10 +1,20 @@
-from flask import Blueprint, make_response, request, jsonify
+from flask import Blueprint, make_response, request, jsonify, current_app
 
-from models import BusinessType, Category, EntityMedia, EntityMediaType, Product, Property
-from flask_jwt_extended import jwt_required
+from models import (
+    Business,
+    Category,
+    EntityMedia,
+    EntityMediaType,
+    Product,
+    Property,
+    PropertyType,
+)
+
+# from flask_jwt_extended import jwt_required
 from config import db
 
-# property = Blueprint("property", __name__, url_prefix="/api/v1/property")
+property = Blueprint("property", __name__, url_prefix="/api/v1/property")
+
 
 @property.route("/create", methods=["POST"])
 # @jwt_required("business_owner")
@@ -18,7 +28,9 @@ def create_property():
         "description",
         "bedrooms",
         "bathrooms",
-        "land_size",
+        "landSize",
+        "businessName",
+        "propertyType",
         "price",
         "location",
         "status",
@@ -36,24 +48,28 @@ def create_property():
             400,
         )
     try:
-        category = Category.query.filter_by(name=data["category"]).first()
-        if not category:
-            return make_response(jsonify({"error": "Category not found"}), 404)
-        business_type = BusinessType.query.filter_by(name=data["businessType"]).first()
-        if not business_type:
-            return make_response(jsonify({"error": "Business type not found"}), 404)
+        property_type = PropertyType.query.filter_by(name=data["propertyType"]).first()
+        if not property_type:
+            return make_response(jsonify({"error": "Property type not found"}))
 
-        files = request.files.getlist("media")
+        business = Business.query.filter_by(name=data["businessName"]).first()
+        if not business:
+            current_app.logger.warning({"warning": "Business not found"})
+            return make_response(jsonify({"error": "Business not found"}), 404)
+
+        # files = request.files.getlist("media")
 
         prop = Property(
             name=data["name"],
+            business_id=business.id,
+            property_type_id=property_type.id,
             description=data["description"],
             bedrooms=data["bedrooms"],
-            land_size = data["landSize"],
-            price = data["price"],
-            location = data["location"],
-            status = data["status"],
-            year_built = data["year_built"]
+            land_size=data["landSize"],
+            price=data["price"],
+            location=data["location"],
+            status=data["status"],
+            year_built=data["year_built"],
         )
         db.session.add(prop)
         db.session.flush()
@@ -80,7 +96,9 @@ def create_property():
         )
 
     except Exception as e:
+        current_app.logger.error(e)
         return make_response(jsonify({"error": str(e)}), 500)
+
 
 @property.route("/getone/<int:property_id>", methods=["GET"])
 def get_property(property_id):
@@ -100,6 +118,7 @@ def get_property(property_id):
     if not property.media:
         property.media = []
     return make_response(jsonify(property.to_dict()))
+
 
 @property.route("/getall", methods=["GET"])
 def get_properties():
@@ -168,4 +187,3 @@ def update_product(property_id):
             {"message": "Property updated successfully", "property": prop.to_dict()}
         )
     )
-

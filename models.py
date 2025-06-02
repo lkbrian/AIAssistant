@@ -177,7 +177,7 @@ class Property(db.Model, SerializerMixin):
         db.Integer, db.ForeignKey("property_types.id"), nullable=False
     )
     name = db.Column(db.String(255))
-    description = db.Column(db.String(255))
+    description = db.Column(db.Text)
     bedrooms = db.Column(db.Integer)
     bathrooms = db.Column(db.Integer)
     land_size = db.Column(db.String(255))

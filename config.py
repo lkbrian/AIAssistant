@@ -16,7 +16,7 @@ app = Flask(__name__)
 
 app.secret_key = os.environ.get("JWT_SECRET_KEY", "default-secret-key")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL", "postgresql://postgres:postgres@db:5432/marketai"
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres"
 )
 app.config["EMBEDDING_MODEL"] = "embed-v4.0"
 app.config["COHERE_API_KEY"] = os.environ.get("COHERE_API_KEY")

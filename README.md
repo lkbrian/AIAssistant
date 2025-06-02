@@ -25,57 +25,6 @@ A containerized Flask backend with PostgreSQL database for the MarketAI assistan
 - **categories**: id, name, description, created_at, updated_at
 - **users**: id, username, email, password_hash, created_at, updated_at
 
-langchain query
-```shell
-curl --location 'http://localhost:5000/api/v1/langchain/query' \
---header 'Content-Type: application/json' \
---data '{
-    "query": "Show me headphones"
-}'
-```
-
-single comprehensive query
-```shell
-  curl --location 'http://localhost:5000/api/v1/groq/nlp_search/products' \
-  --header 'Content-Type: application/json' \
-  --data '{
-      "message": "I want a tv and headphones below kes 1000"
-  }'
-  ```
-
-- `POST /api/v1/groq/nlp_search/products/multiple`: Search products using natural language with multiple query interpretations
-```shell
-  curl --location 'http://localhost:5000/api/v1/groq/nlp_search/products/multiple' \
-  --header 'Content-Type: application/json' \
-  --data '{
-      "message": "I want a tv and headphones below kes 1000"
-  }'
-  ```
-
-- `POST /api/v1/groq/products/semantic-search`: Search products by semantic similarity using embeddings
-```shell
-  curl --location 'http://localhost:5000/api/v1/groq/products/semantic-search' \
-  --header 'Content-Type: application/json' \
-  --data '{
-      "query": "comfortable headphones for long listening sessions",
-      "limit": 5
-  }'
-  ```
-
-- `POST /api/v1/groq/generate-embedding`: Generate embedding for text
-```shell
-  curl --location 'http://localhost:5000/api/v1/groq/generate-embedding' \
-  --header 'Content-Type: application/json' \
-  --data '{
-      "text": "High-performance smartphone with excellent camera quality"
-  }'
-  ```
-
-- `GET /api/v1/groq/generate-embeddings/all`: Generate embeddings for all products that don't have them
-```shell
-  curl --location 'http://localhost:5000/api/v1/groq/generate-embeddings/all' \
-  --header 'Authorization: Bearer YOUR_JWT_TOKEN'
-  ```
 
 ## Setup and Installation
 
@@ -110,13 +59,13 @@ The database will be automatically initialized with the required tables and exte
 
 ```shell
 docker cp seed.sql $(docker compose ps -q db):/seed.sql
-docker compose exec db psql -U postgres -d marketai -f /seed.sql
+docker compose exec db psql -U postgres -d postgres -f /seed.sql
 ```
 
 confirm the database for tables and seeded data
  - access the database 
  ```shell
- docker compose exec db psql -U postgres -d marketai
+ docker compose exec db psql -U postgres -d postgres
  ```
  - check tables 
  ```shell
