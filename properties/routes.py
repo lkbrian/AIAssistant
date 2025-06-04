@@ -12,6 +12,8 @@ from models import (
 
 # from flask_jwt_extended import jwt_required
 from config import db
+from werkzeug.utils import secure_filename
+from products.utils import upload_file_to_azure
 
 property = Blueprint("property", __name__, url_prefix="/api/v1/property")
 
@@ -57,8 +59,6 @@ def create_property():
             current_app.logger.warning({"warning": "Business not found"})
             return make_response(jsonify({"error": "Business not found"}), 404)
 
-        # files = request.files.getlist("media")
-
         prop = Property(
             name=data["name"],
             business_id=business.id,
@@ -76,19 +76,27 @@ def create_property():
         entity_type = EntityMediaType.query.filter_by(name="property").first()
         if not entity_type:
             return make_response(jsonify({"error": "Entity type not found"}), 404)
-        entity_media = EntityMedia(
-            entity_id=prop.id,
-            entity_type_id=entity_type.id,
-            url="",
-            storage_type=1,  # Assuming 1 is for local storage
-        )
-        db.session.add(entity_media)
+
+        files = request.files.getlist("media")
+        for idx, file_obj in enumerate(files):
+            safe_filename = secure_filename(file_obj.filename)
+            blob_name = f"properties/{prop.id}/{idx}_{safe_filename}"
+            result = upload_file_to_azure(file_obj, blob_name)
+            if isinstance(result, dict) and result.get("url"):
+                url = result.get("url")
+                entity_media = EntityMedia(
+                    entity_id=prop.id,
+                    entity_type_id=entity_type.id,
+                    url=url,
+                    storage_type=2,
+                )
+                db.session.add(entity_media)
         db.session.commit()
 
         return make_response(
             jsonify(
                 {
-                    "message": "property created successfully",
+                    "message": "Property created successfully",
                     "product": prop.to_dict(),
                 }
             ),
